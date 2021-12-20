@@ -23,5 +23,4 @@ jobs:
         application_name: Debate-backend
         environment_name: DebateBackend-env
         region: us-west-1
-        version: 153
         deployment_package: deploy.zip
