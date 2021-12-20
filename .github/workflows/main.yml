@@ -20,13 +20,6 @@ jobs:
       with:
         format: YYYYMMDD-HH
         utcOffset: "+08:00"
-    - name: Use current time
-      env:
-        TIME: "${{ steps.current-time.outputs.time }}"
-        R_TIME: "${{ steps.current-time.outputs.readableTime }}"
-        F_TIME: "${{ steps.current-time.outputs.formattedTime }}"
-        YEAR: "${{ steps.current-time.outputs.year }}"
-        DAY: "${{ steps.current-time.outputs.day }}"
       
     - name: Deploy to EB
       uses: einaregilsson/beanstalk-deploy@v20
@@ -36,5 +29,5 @@ jobs:
         application_name: Debate-backend
         environment_name: DebateBackend-env
         region: us-west-1
-        version_label: $TIME
+        version_label: "${{ steps.current-time.outputs.time }}"
         deployment_package: deploy.zip
