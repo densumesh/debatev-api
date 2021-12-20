@@ -14,7 +14,20 @@ jobs:
 
     - name: Generate deployment package
       run: zip -r deploy.zip . -x '*.git*'
-
+    - name: Get current time
+      uses: 1466587594/get-current-time@v2
+      id: current-time
+      with:
+        format: YYYYMMDD-HH
+        utcOffset: "+08:00"
+    - name: Use current time
+      env:
+        TIME: "${{ steps.current-time.outputs.time }}"
+        R_TIME: "${{ steps.current-time.outputs.readableTime }}"
+        F_TIME: "${{ steps.current-time.outputs.formattedTime }}"
+        YEAR: "${{ steps.current-time.outputs.year }}"
+        DAY: "${{ steps.current-time.outputs.day }}"
+      
     - name: Deploy to EB
       uses: einaregilsson/beanstalk-deploy@v20
       with:
@@ -23,5 +36,5 @@ jobs:
         application_name: Debate-backend
         environment_name: DebateBackend-env
         region: us-west-1
-        version_label: 2
+        version_label: $TIME
         deployment_package: deploy.zip
