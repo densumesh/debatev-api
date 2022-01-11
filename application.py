@@ -232,7 +232,7 @@ def getcards(cardid):
                                        doc['_source'], 'dtype: ' + doc['_index'])
         i += 1
 
-    return res
+    return results
 
 
 @cross_origin(origin='*', headers=['Content-Type', 'Authorization'])
