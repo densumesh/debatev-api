@@ -227,6 +227,8 @@ def getcards(cardid):
                     "query": {"match_phrase": {"_id": cardid}}})
     i = 0
     results = {}
+    results['hits'] = res['hits']['total']['value']
+
     for doc in res['hits']['hits']:
         results['_source' + str(i)] = (doc['_id'],
                                        doc['_source'], 'dtype: ' + doc['_index'])
