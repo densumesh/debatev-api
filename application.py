@@ -110,10 +110,10 @@ def search():
         year = request.args['year'].split(',')
         dtype = request.args['dtype']
         body = {"query": {"bool": {"must": [{"multi_match": {"query": id, "fields": [
-            "tag^2", "cardHtml", "_id"], "operator": "and"}}, {"terms": {"year": year}}]}}}
+            "tag^2", "cardHtml"], "operator": "and", "fuzziness": "AUTO"}}, {"terms": {"year": year}}]}}}
         if dtype == "usersubmit":
             res = es.search(index="openev,ld,college,hspolicy,usersubmit", doc_type="cards", from_=(int(page)*amt), track_total_hits=True,
-                            size=amt, body={"query": {"multi_match": {"query": id, "fields": ["tag^2", "cardHtml", "_id"], "operator": "and"}}})
+                            size=amt, body={"query": {"multi_match": {"query": id, "fields": ["tag^2", "cardHtml"], "operator": "and", "fuzziness": "AUTO"}}})
         else:
             res = es.search(index=str(dtype), from_=(
                 int(page)*amt), size=amt, doc_type="cards", track_total_hits=True, body=body)
@@ -121,7 +121,7 @@ def search():
     elif 'year' in request.args:
         year = request.args['year'].split(',')
         body = {"query": {"bool": {"must": [{"multi_match": {"query": id, "fields": [
-            "tag^2", "cardHtml", "_id"], "operator": "and"}}, {"terms": {"year": year}}]}}}
+            "tag^2", "cardHtml"], "operator": "and", "fuzziness": "AUTO"}}, {"terms": {"year": year}}]}}}
         res = es.search(index="openev,ld,college,hspolicy", from_=(
             int(page)*amt), size=amt, doc_type="cards", track_total_hits=True, body=body)
 
@@ -129,14 +129,14 @@ def search():
         dtype = request.args['dtype']
         if dtype == "usersubmit":
             res = es.search(index="openev,ld,college,hspolicy,usersubmit", doc_type="cards", from_=(int(page)*amt), track_total_hits=True,
-                            size=amt, body={"query": {"multi_match": {"query": id, "fields": ["tag^2", "cardHtml", "_id"], "operator": "and"}}})
+                            size=amt, body={"query": {"multi_match": {"query": id, "fields": ["tag^2", "cardHtml"], "operator": "and", "fuzziness": "AUTO"}}})
         else:
             res = es.search(index=str(dtype), doc_type="cards", from_=(int(page)*amt), track_total_hits=True, size=amt,
-                            body={"query": {"multi_match": {"query": id, "fields": ["tag^2", "cardHtml", "_id"], "operator": "and"}}})
+                            body={"query": {"multi_match": {"query": id, "fields": ["tag^2", "cardHtml"], "operator": "and", "fuzziness": "AUTO"}}})
 
     else:
         res = es.search(index="openev,ld,college,hspolicy", doc_type="cards", from_=(int(page)*amt), track_total_hits=True,
-                        size=amt, body={"query": {"multi_match": {"query": id, "fields": ["tag^2", "cardHtml", "_id"], "operator": "and"}}})
+                        size=amt, body={"query": {"multi_match": {"query": id, "fields": ["tag^2", "cardHtml"], "operator": "and", "fuzziness": "AUTO"}}})
 
     tags = []
     cite = []
@@ -176,24 +176,24 @@ def autocomplete():
         year = request.args['year'].split(',')
         dtype = request.args['dtype']
         body = {"query": {"bool": {"must": [{"multi_match": {"query": id, "fields": [
-                "tag^2", "cardHtml", "_id"], "operator": "and"}}, {"terms": {"year": year}}]}}}
+                "tag^2", "cardHtml"], "operator": "and"}}, {"terms": {"year": year}}]}}}
         res = es.search(index=str(dtype), from_=(int(0)*amt), size=amt,
                         doc_type="cards", track_total_hits=True, body=body)
 
     elif 'year' in request.args:
         year = request.args['year'].split(',')
         body = {"query": {"bool": {"must": [{"multi_match": {"query": id, "fields": [
-            "tag^2", "cardHtml", "_id"], "operator": "and"}}, {"terms": {"year": year}}]}}}
+            "tag^2", "cardHtml"], "operator": "and"}}, {"terms": {"year": year}}]}}}
         res = es.search(index="openev,ld,college,hspolicy", from_=(
             int(0)*amt), size=amt, doc_type="cards", track_total_hits=True, body=body)
 
     elif 'dtype' in request.args:
         dtype = request.args['dtype']
         res = es.search(index=str(dtype), doc_type="cards", from_=(int(0)*amt), track_total_hits=True, size=amt, body={
-            "query": {"multi_match": {"query": id, "fields": ["tag^2", "cardHtml", "_id"], "operator": "and"}}})
+            "query": {"multi_match": {"query": id, "fields": ["tag^2", "cardHtml"], "operator": "and"}}})
     else:
         res = es.search(index="openev,ld,college,hspolicy", doc_type="cards", from_=(int(0)*amt), track_total_hits=True,
-                        size=amt, body={"query": {"multi_match": {"query": id, "fields": ["tag^2", "cardHtml", "_id"], "operator": "and"}}})
+                        size=amt, body={"query": {"multi_match": {"query": id, "fields": ["tag^2", "cardHtml"], "operator": "and"}}})
 
     tags = []
     cite = []
@@ -327,7 +327,7 @@ def uploadCase():
                 filename, "https://www.debatev.com/" + file.filename, "usersubmit", 2021)
             uploadcase(html,  "usersubmit")
             os.remove(filename)
-            return "Uploaded" + str(filename), 200
+            return "Uploaded " + str(filename), 200
         except Exception as e:
             return "Error: " + str(e), 400
 
