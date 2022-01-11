@@ -225,6 +225,13 @@ def getcards(cardid):
 
     res = es.search(index="_all", doc_type="cards", body={
                     "query": {"match_phrase": {"_id": cardid}}})
+    i = 0
+    results = {}
+    for doc in res['hits']['hits']:
+        results['_source' + str(i)] = (doc['_id'],
+                                       doc['_source'], 'dtype: ' + doc['_index'])
+        i += 1
+
     return res
 
 
