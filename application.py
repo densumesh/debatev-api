@@ -110,10 +110,10 @@ def search():
         year = request.args['year'].split(',')
         dtype = request.args['dtype']
         body = {"query": {"bool": {"must": [{"multi_match": {"query": id, "fields": [
-            "tag^2", "cardHtml"], "operator": "and", "fuzziness": "AUTO"}}, {"terms": {"year": year}}]}}}
+            "tag^2", "cardHtml"], "operator": "and", "fuzziness": "AUTO", "prefix_length": 1}}, {"terms": {"year": year}}]}}}
         if dtype == "usersubmit":
             res = es.search(index="openev,ld,college,hspolicy,usersubmit", doc_type="cards", from_=(int(page)*amt), track_total_hits=True,
-                            size=amt, body={"query": {"multi_match": {"query": id, "fields": ["tag^2", "cardHtml"], "operator": "and", "fuzziness": "AUTO"}}})
+                            size=amt, body={"query": {"multi_match": {"query": id, "fields": ["tag^2", "cardHtml"], "operator": "and", "fuzziness": "AUTO", "prefix_length": 1}}})
         else:
             res = es.search(index=str(dtype), from_=(
                 int(page)*amt), size=amt, doc_type="cards", track_total_hits=True, body=body)
@@ -121,7 +121,7 @@ def search():
     elif 'year' in request.args:
         year = request.args['year'].split(',')
         body = {"query": {"bool": {"must": [{"multi_match": {"query": id, "fields": [
-            "tag^2", "cardHtml"], "operator": "and", "fuzziness": "AUTO"}}, {"terms": {"year": year}}]}}}
+            "tag^2", "cardHtml"], "operator": "and", "fuzziness": "AUTO", "prefix_length": 1}}, {"terms": {"year": year}}]}}}
         res = es.search(index="openev,ld,college,hspolicy", from_=(
             int(page)*amt), size=amt, doc_type="cards", track_total_hits=True, body=body)
 
@@ -129,14 +129,14 @@ def search():
         dtype = request.args['dtype']
         if dtype == "usersubmit":
             res = es.search(index="openev,ld,college,hspolicy,usersubmit", doc_type="cards", from_=(int(page)*amt), track_total_hits=True,
-                            size=amt, body={"query": {"multi_match": {"query": id, "fields": ["tag^2", "cardHtml"], "operator": "and", "fuzziness": "AUTO"}}})
+                            size=amt, body={"query": {"multi_match": {"query": id, "fields": ["tag^2", "cardHtml"], "operator": "and", "fuzziness": "AUTO", "prefix_length": 1}}})
         else:
             res = es.search(index=str(dtype), doc_type="cards", from_=(int(page)*amt), track_total_hits=True, size=amt,
-                            body={"query": {"multi_match": {"query": id, "fields": ["tag^2", "cardHtml"], "operator": "and", "fuzziness": "AUTO"}}})
+                            body={"query": {"multi_match": {"query": id, "fields": ["tag^2", "cardHtml"], "operator": "and", "fuzziness": "AUTO", "prefix_length": 1}}})
 
     else:
         res = es.search(index="openev,ld,college,hspolicy", doc_type="cards", from_=(int(page)*amt), track_total_hits=True,
-                        size=amt, body={"query": {"multi_match": {"query": id, "fields": ["tag^2", "cardHtml"], "operator": "and", "fuzziness": "AUTO"}}})
+                        size=amt, body={"query": {"multi_match": {"query": id, "fields": ["tag^2", "cardHtml"], "operator": "and", "fuzziness": "AUTO", "prefix_length": 1}}})
 
     tags = []
     cite = []
