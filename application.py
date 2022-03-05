@@ -50,7 +50,7 @@ async def search(q: str, p: int, year: Optional[str] = None, dtype: Optional[str
     cite = []
     results = {}
     i = 0
-    results['hits'] = res['hits']['total']['value']
+
     try:
         for doc in res['hits']['hits']:
             if doc['_source']['tag'] not in tags and doc['_source']['cite'] not in cite:
@@ -64,6 +64,7 @@ async def search(q: str, p: int, year: Optional[str] = None, dtype: Optional[str
                     "query": {"match_phrase": {"_id": doc['_id']}}})
     except KeyError:
         pass
+    results['hits'] = res['hits']['total']['value']
     return results
 
 
@@ -127,13 +128,12 @@ async def get_card(cardid: str):
         "query": {"match_phrase": {"_id": cardid}}})
     i = 0
     results = {}
-    results['hits'] = res['hits']['total']['value']
 
     for doc in res['hits']['hits']:
         results['_source' + str(i)] = (doc['_id'],
                                        doc['_source'], 'dtype: ' + doc['_index'])
         i += 1
-
+    results['hits'] = res['hits']['total']['value']
     return results
 
 
