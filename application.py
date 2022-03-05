@@ -54,8 +54,8 @@ async def search(q: str, p: int, year: Optional[str] = None, dtype: Optional[str
     try:
         for doc in res['hits']['hits']:
             if doc['_source']['tag'] not in tags and doc['_source']['cite'] not in cite:
-                tags.applicationend(doc['_source']['tag'])
-                cite.applicationend(doc['_source']['cite'])
+                tags.append(doc['_source']['tag'])
+                cite.append(doc['_source']['cite'])
                 results['_source' + str(i)] = (doc['_id'],
                                                doc['_source'], 'dtype: ' + doc['_index'])
                 i += 1
@@ -96,8 +96,8 @@ async def autocomplete(q: str, dtype: Optional[str] = None, year: Optional[str] 
     try:
         for doc in res['hits']['hits']:
             if doc['_source']['tag'] not in tags and doc['_source']['cite'] not in cite:
-                tags.applicationend(doc['_source']['tag'])
-                cite.applicationend(doc['_source']['cite'])
+                tags.append(doc['_source']['tag'])
+                cite.append(doc['_source']['cite'])
                 results['_source' + str(i)] = (doc['_id'],
                                                doc['_source']['tag'], 'dtype: ' + doc['_index'])
                 i += 1
@@ -142,8 +142,8 @@ async def saved(q: str):
     cardid = q.split(',')
     search_arr = []
     for i in range(len(cardid)):
-        search_arr.applicationend({'index': '_all'})
-        search_arr.applicationend(
+        search_arr.append({'index': '_all'})
+        search_arr.append(
             {"query": {"match_phrase": {"_id": cardid[i]}}})
     req = ''
     for each in search_arr:
@@ -168,8 +168,8 @@ async def download(q: str):
     cardid = q.split(',')
     search_arr = []
     for i in range(len(cardid)):
-        search_arr.applicationend({'index': '_all'})
-        search_arr.applicationend(
+        search_arr.append({'index': '_all'})
+        search_arr.append(
             {"query": {"match_phrase": {"_id": cardid[i]}}})
     req = ''
     for each in search_arr:
