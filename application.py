@@ -9,18 +9,21 @@ from htmldocx import HtmlToDocx
 from fastapi.middleware.cors import CORSMiddleware
 
 
-app = FastAPI()
-app.add_middleware(
+application = FastAPI()
+application.add_middleware(
     CORSMiddleware,
     allow_origins="*",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-es = AsyncElasticsearch(hosts=["https://localhost:9200"], verify_certs=False)
+es = AsyncElasticsearch(
+    hosts=[{'host': 'vpc-debateev2-rh4osogaj2xrcjufnehcrce7hm.us-west-1.es.amazonaws.com', 'port': 443}],
+    use_ssl=True
+)
 
 
-@app.get("/api/v1/search")
+@application.get("/api/v1/search")
 async def search(q: str, p: int, year: Optional[str] = None, dtype: Optional[str] = None):
     amt = 20
     if year and dtype:
@@ -51,8 +54,8 @@ async def search(q: str, p: int, year: Optional[str] = None, dtype: Optional[str
     try:
         for doc in res['hits']['hits']:
             if doc['_source']['tag'] not in tags and doc['_source']['cite'] not in cite:
-                tags.append(doc['_source']['tag'])
-                cite.append(doc['_source']['cite'])
+                tags.applicationend(doc['_source']['tag'])
+                cite.applicationend(doc['_source']['cite'])
                 results['_source' + str(i)] = (doc['_id'],
                                                doc['_source'], 'dtype: ' + doc['_index'])
                 i += 1
@@ -64,7 +67,7 @@ async def search(q: str, p: int, year: Optional[str] = None, dtype: Optional[str
     return results
 
 
-@app.get("/api/v1/autocomplete")
+@application.get("/api/v1/autocomplete")
 async def autocomplete(q: str, dtype: Optional[str] = None, year: Optional[str] = None):
     amt = 5
     if year and dtype:
@@ -93,8 +96,8 @@ async def autocomplete(q: str, dtype: Optional[str] = None, year: Optional[str] 
     try:
         for doc in res['hits']['hits']:
             if doc['_source']['tag'] not in tags and doc['_source']['cite'] not in cite:
-                tags.append(doc['_source']['tag'])
-                cite.append(doc['_source']['cite'])
+                tags.applicationend(doc['_source']['tag'])
+                cite.applicationend(doc['_source']['cite'])
                 results['_source' + str(i)] = (doc['_id'],
                                                doc['_source']['tag'], 'dtype: ' + doc['_index'])
                 i += 1
@@ -107,7 +110,7 @@ async def autocomplete(q: str, dtype: Optional[str] = None, year: Optional[str] 
     return results
 
 
-@app.get('/api/v1/cards/imfeelinglucky')
+@application.get('/api/v1/cards/imfeelinglucky')
 async def imfeelinglucky():
     results = {}
     res = await es.search(index="openev,ld,college,hspolicy,usersubmit", doc_type="cards", body={"size": 1, "query": {"function_score": {
@@ -118,7 +121,7 @@ async def imfeelinglucky():
     return results
 
 
-@app.get("/api/v1/cards/{cardid}")
+@application.get("/api/v1/cards/{cardid}")
 async def get_card(cardid: str):
     res = await es.search(index="_all", body={
         "query": {"match_phrase": {"_id": cardid}}})
@@ -134,13 +137,14 @@ async def get_card(cardid: str):
     return results
 
 
-@app.get("/api/v1/saved")
+@application.get("/api/v1/saved")
 async def saved(q: str):
     cardid = q.split(',')
     search_arr = []
     for i in range(len(cardid)):
-        search_arr.append({'index': '_all'})
-        search_arr.append({"query": {"match_phrase": {"_id": cardid[i]}}})
+        search_arr.applicationend({'index': '_all'})
+        search_arr.applicationend(
+            {"query": {"match_phrase": {"_id": cardid[i]}}})
     req = ''
     for each in search_arr:
         req += '%s \n' % json.dumps(each)
@@ -154,18 +158,19 @@ async def saved(q: str):
     return x
 
 
-@app.get("/", response_class=HTMLResponse)
+@application.get("/", response_class=HTMLResponse)
 async def root():
     return '<h1>Welcome to the DebateEV API</h1><p>If you came here by accident, go to <a href="http://debatev.com">the main site</a></p>'
 
 
-@app.get('/api/v1/download')
+@application.get('/api/v1/download')
 async def download(q: str):
     cardid = q.split(',')
     search_arr = []
     for i in range(len(cardid)):
-        search_arr.append({'index': '_all'})
-        search_arr.append({"query": {"match_phrase": {"_id": cardid[i]}}})
+        search_arr.applicationend({'index': '_all'})
+        search_arr.applicationend(
+            {"query": {"match_phrase": {"_id": cardid[i]}}})
     req = ''
     for each in search_arr:
         req += '%s \n' % json.dumps(each)
@@ -181,4 +186,4 @@ async def download(q: str):
 
 
 if __name__ == "__main__":
-    uvicorn.run("app:app", reload=True)
+    uvicorn.run("application:application", reload=True)
