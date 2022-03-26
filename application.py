@@ -1,5 +1,6 @@
 import random
 from fastapi import FastAPI
+from pydantic import BaseModel
 import uvicorn
 from fastapi.responses import HTMLResponse, FileResponse
 from elasticsearch import AsyncElasticsearch
@@ -8,8 +9,36 @@ import json
 from htmldocx import HtmlToDocx
 from fastapi.middleware.cors import CORSMiddleware
 
+tags_metadata = [
+    {
+        "name": "search",
+        "description": "Search for a query in the Elasticsearch database",
+    },
+    {
+        "name": "autocomplete",
+        "description": "Autocomplete search queries as you type",
+    },
+    {
+        "name": "imfeelinglucky",
+        "description": "Get a random card from the database",
+    },
+    {
+        "name": "get_card",
+        "description": "Get a specific card from the database",
+    },
+    {
+        "name": "saved",
+        "description": "Get saved cards",
+    },
+    {
+        "name": "download",
+        "description": "Download a card as a Word document",
+    }
+]
 
-application = FastAPI()
+
+application = FastAPI(title="Debate Evidence API",
+                      description="A REST API for the Debate Evidence project", openapi_tags=tags_metadata)
 application.add_middleware(
     CORSMiddleware,
     allow_origins="*",
@@ -23,18 +52,39 @@ es = AsyncElasticsearch(
 )
 
 
-@application.get("/api/v1/search")
+@application.get("/api/v1/search", tags=["search"],
+                 responses={
+    200: {
+        "description": "Results by query",
+        "content": {
+            "application/json": {
+                "example": {
+                    "_source0": [
+                        "CARD_ID",
+                        {
+                            "tag": "Tag with HTML formatting",
+                            "cite": "Cite with HTML formatting",
+                            "cardHtml": "Full text of response with HTML formatting",
+                            "filepath": "Link to orginal document",
+                            "year": "Year of card"
+                        },
+                        "dtype: Index of document"
+                    ]}
+            }
+        },
+    },
+},)
 async def search(q: str, p: int, year: Optional[str] = None, dtype: Optional[str] = "openev,ld,college,hspolicy"):
     amt = 20
     if year:
         years = year.split(",")
         body = {"query": {"bool": {"must": [{"multi_match": {"query": q, "fields": [
-            "tag^2", "cardHtml"], "operator": "and", "fuzziness": "AUTO", "prefix_length": 1}}, {"terms": {"year": years}}]}}}
+            "tag^2", "cardHtml", "cite"], "operator": "and", "fuzziness": "AUTO", "prefix_length": 1}}, {"terms": {"year": years}}]}}}
         res = await es.search(index=dtype, from_=(
             int(p)*amt), size=amt, doc_type="cards", track_total_hits=True, body=body)
     else:
         res = await es.search(index=dtype, doc_type="cards", from_=(int(p)*amt), track_total_hits=True,
-                              size=amt, body={"query": {"multi_match": {"query": q, "fields": ["tag^2", "cardHtml"], "operator": "and", "fuzziness": "AUTO", "prefix_length": 1}}})
+                              size=amt, body={"query": {"multi_match": {"query": q, "fields": ["tag^2", "cardHtml", "cite"], "operator": "and", "fuzziness": "AUTO", "prefix_length": 1}}})
     tags = []
     cite = []
     results = {}
@@ -57,18 +107,33 @@ async def search(q: str, p: int, year: Optional[str] = None, dtype: Optional[str
     return results
 
 
-@application.get("/api/v1/autocomplete")
+@application.get("/api/v1/autocomplete", tags=["autocomplete"],
+                 responses={
+    200: {
+        "description": "Autocomplete search queries as you type",
+        "content": {
+            "application/json": {
+                "example": {
+                    "_source0": [
+                        "CARD_ID",
+                        "Tag with HTML formatting",
+                        "dtype: Index of document"
+                    ]}
+            }
+        },
+    },
+})
 async def autocomplete(q: str, dtype: Optional[str] = "openev,ld,college,hspolicy", year: Optional[str] = None):
     amt = 5
     if year:
         years = year.split(",")
         body = {"query": {"bool": {"must": [{"multi_match": {"query": q, "fields": [
-            "tag^2", "cardHtml"], "operator": "and"}}, {"terms": {"year": years}}]}}, "fields": ["tag", "cite"]}
+            "tag^2", "cardHtml", "cite"], "operator": "and"}}, {"terms": {"year": years}}]}}, "fields": ["tag", "cite"]}
         res = await es.search(index=dtype, from_=(
             int(0)*amt), size=amt, doc_type="cards", track_total_hits=True, body=body)
     else:
         res = await es.search(index=dtype, doc_type="cards", from_=(int(0)*amt), track_total_hits=True,
-                              size=amt, body={"query": {"multi_match": {"query": q, "fields": ["tag^2", "cardHtml"], "operator": "and"}}, "fields": ["tag", "cite"]})
+                              size=amt, body={"query": {"multi_match": {"query": q, "fields": ["tag^2", "cardHtml", "cite"], "operator": "and"}}, "fields": ["tag", "cite"]})
 
     tags = []
     cite = []
@@ -91,7 +156,28 @@ async def autocomplete(q: str, dtype: Optional[str] = "openev,ld,college,hspolic
     return results
 
 
-@application.get('/api/v1/cards/imfeelinglucky')
+@application.get('/api/v1/cards/imfeelinglucky', tags=["imfeelinglucky"],
+                 responses={
+    200: {
+        "description": "Autocomplete search queries as you type",
+        "content": {
+            "application/json": {
+                "example": {
+                    "_source": [
+                        "CARD_ID",
+                        {
+                            "tag": "Tag with HTML formatting",
+                            "cite": "Cite with HTML formatting",
+                            "cardHtml": "Full text of response with HTML formatting",
+                            "filepath": "Link to orginal document",
+                            "year": "Year of card"
+                        },
+                        "dtype: Index of document"
+                    ]
+                }
+            },
+        },
+    }})
 async def imfeelinglucky():
     results = {}
     res = await es.search(index="openev,ld,college,hspolicy,usersubmit", doc_type="cards", body={"size": 1, "query": {"function_score": {
@@ -102,7 +188,28 @@ async def imfeelinglucky():
     return results
 
 
-@application.get("/api/v1/cards/{cardid}")
+@application.get("/api/v1/cards/{cardid}", tags=["get_card"],
+                 responses={
+    200: {
+        "description": "Autocomplete search queries as you type",
+        "content": {
+            "application/json": {
+                "example": {
+                    "_source0": [
+                        "CARD_ID",
+                        {
+                            "tag": "Tag with HTML formatting",
+                            "cite": "Cite with HTML formatting",
+                            "cardHtml": "Full text of response with HTML formatting",
+                            "filepath": "Link to orginal document",
+                            "year": "Year of card"
+                        },
+                        "dtype: Index of document"
+                    ]
+                }
+            },
+        },
+    }})
 async def get_card(cardid: str):
     res = await es.search(index="_all", body={
         "query": {"match_phrase": {"_id": cardid}}})
@@ -117,7 +224,27 @@ async def get_card(cardid: str):
     return results
 
 
-@application.get("/api/v1/saved")
+@application.get("/api/v1/saved", tags=["saved"], responses={
+    200: {
+        "description": "Autocomplete search queries as you type",
+        "content": {
+            "application/json": {
+                "example": {
+                    "_source0": [
+                        "CARD_ID",
+                        {
+                            "tag": "Tag with HTML formatting",
+                            "cite": "Cite with HTML formatting",
+                            "cardHtml": "Full text of response with HTML formatting",
+                            "filepath": "Link to orginal document",
+                            "year": "Year of card"
+                        },
+                        "dtype: Index of document"
+                    ]
+                }
+            },
+        },
+    }})
 async def saved(q: str):
     cardid = q.split(',')
     search_arr = []
@@ -143,7 +270,7 @@ async def root():
     return '<h1>Welcome to the DebateEV API</h1><p>If you came here by accident, go to <a href="http://debatev.com">the main site</a></p>'
 
 
-@application.get('/api/v1/download')
+@application.get('/api/v1/download', tags=["download"])
 async def download(q: str):
     cardid = q.split(',')
     search_arr = []
