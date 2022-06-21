@@ -74,17 +74,27 @@ es = AsyncElasticsearch(
         },
     },
 },)
-async def search(q: str, p: int, year: Optional[str] = None, dtype: Optional[str] = "openev,ld,college,hspolicy"):
+async def search(q: str, p: int, year: Optional[str] = None, dtype: Optional[str] = "openev,ld,college,hspolicy", order: Optional[str] = None):
     amt = 20
     if year:
         years = year.split(",")
-        body = {"query": {"bool": {"must": [{"multi_match": {"query": q, "fields": [
-            "tag^2", "cardHtml", "cite"], "operator": "and", "fuzziness": "AUTO", "prefix_length": 1}}, {"terms": {"year": years}}]}}}
+        if order == "year":
+            body = {"query": {"bool": {"must": [{"multi_match": {"query": q, "fields": [
+                "tag^2", "cardHtml", "cite"], "operator": "and", "fuzziness": "AUTO", "prefix_length": 1}}, {"terms": {"year.keyword": years}}]}}, "sort": [{"year": {"order": "desc"}}, "_score"]}
+        else:
+            body = {"query": {"bool": {"must": [{"multi_match": {"query": q, "fields": [
+                "tag^2", "cardHtml", "cite"], "operator": "and", "fuzziness": "AUTO", "prefix_length": 1}}, {"terms": {"year.keyword": years}}]}}}
         res = await es.search(index=dtype, from_=(
             int(p)*amt), size=amt, doc_type="cards", track_total_hits=True, body=body)
     else:
+        if order == "year":
+            body = {"query": {"multi_match": {"query": q, "fields": [
+                "tag^2", "cardHtml", "cite"], "operator": "and", "fuzziness": "AUTO", "prefix_length": 1}}, "sort": [{"year.keyword": {"order": "desc"}}, "_score"]}
+        else:
+            body = {"query": {"multi_match": {"query": q, "fields": [
+                "tag^2", "cardHtml", "cite"], "operator": "and", "fuzziness": "AUTO", "prefix_length": 1}}}
         res = await es.search(index=dtype, doc_type="cards", from_=(int(p)*amt), track_total_hits=True,
-                              size=amt, body={"query": {"multi_match": {"query": q, "fields": ["tag^2", "cardHtml", "cite"], "operator": "and", "fuzziness": "AUTO", "prefix_length": 1}}})
+                              size=amt, body=body)
     tags = []
     cite = []
     results = {}
