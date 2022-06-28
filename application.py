@@ -143,7 +143,7 @@ async def autocomplete(q: str, dtype: Optional[str] = "openev,ld,college,hspolic
             int(0)*amt), size=amt, doc_type="cards", track_total_hits=True, body=body)
     else:
         res = await es.search(index=dtype, doc_type="cards", from_=(int(0)*amt), track_total_hits=True,
-                              size=amt, body={"query": {"multi_match": {"query": q, "fields": ["tag^2", "cardHtml", "cite"], "operator": "and"}}, "fields": ["tag", "cite"]})
+                              size=amt, body={"query": {"multi_match": {"query": q, "fields": ["tag^2", "cardHtml", "cite"], "operator": "and", "fuzziness": 1, "prefix_length": 1}}, "fields": ["tag", "cite"]})
 
     tags = []
     cite = []
