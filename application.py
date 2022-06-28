@@ -138,7 +138,7 @@ async def autocomplete(q: str, dtype: Optional[str] = "openev,ld,college,hspolic
     if year:
         years = year.split(",")
         body = {"query": {"bool": {"must": [{"multi_match": {"query": q, "fields": [
-            "tag^2", "cardHtml", "cite"], "operator": "and"}}, {"terms": {"year": years}}]}}, "fields": ["tag", "cite"]}
+            "tag^2", "cardHtml", "cite"], "operator": "and", "fuzziness": 1, "prefix_length": 1}}, {"terms": {"year": years}}]}}, "fields": ["tag", "cite"]}
         res = await es.search(index=dtype, from_=(
             int(0)*amt), size=amt, doc_type="cards", track_total_hits=True, body=body)
     else:
