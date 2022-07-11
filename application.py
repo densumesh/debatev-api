@@ -277,7 +277,7 @@ async def saved(q: str):
 
 @application.get("/", response_class=HTMLResponse)
 async def root():
-    return '<h1>Welcome to the DebateEV API</h1><p>If you came here by accident, go to <a href="http://debatev.com">the main site</a></p>'
+    return '<h1>Welcome to the DebateEV API</h1><p>If you came here by accident, go to <a href="http://debatev.com">the main site, or look at the <a href="http://api.debatev.com/docs>documentation</a></p>'
 
 
 @application.get('/api/v1/download', tags=["download"])
