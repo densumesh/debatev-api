@@ -7,6 +7,28 @@ from typing import Optional
 import json
 from htmldocx import HtmlToDocx
 from fastapi.middleware.cors import CORSMiddleware
+import logging
+import socket
+from logging.handlers import SysLogHandler
+
+
+class ContextFilter(logging.Filter):
+    hostname = socket.gethostname()
+
+    def filter(self, record):
+        record.hostname = ContextFilter.hostname
+        return True
+
+
+syslog = SysLogHandler(address=('logs3.papertrailapp.com', 28701))
+syslog.addFilter(ContextFilter())
+format = '%(asctime)s %(hostname)s DEBATEV_BACKEND: %(message)s'
+formatter = logging.Formatter(format, datefmt='%b %d %H:%M:%S')
+syslog.setFormatter(formatter)
+logger = logging.getLogger()
+logger.addHandler(syslog)
+logger.setLevel(logging.INFO)
+logger.info("This is a message")
 
 tags_metadata = [
     {
