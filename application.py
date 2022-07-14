@@ -1,6 +1,5 @@
 import random
 from fastapi import FastAPI
-from pydantic import BaseModel
 import uvicorn
 from fastapi.responses import HTMLResponse, FileResponse
 from elasticsearch import AsyncElasticsearch
@@ -269,9 +268,12 @@ async def saved(q: str):
     x = {}
     i = 0
     for card in res['responses']:
-        x['_source' + str(i)] = (card['hits']['hits'][0]['_id'], card['hits']
-                                 ['hits'][0]['_source'], 'dtype: ' + card['hits']['hits'][0]['_index'])
-        i += 1
+        try:
+            x['_source' + str(i)] = (card['hits']['hits'][0]['_id'], card['hits']
+                                     ['hits'][0]['_source'], 'dtype: ' + card['hits']['hits'][0]['_index'])
+            i += 1
+        except KeyError:
+            pass
     return x
 
 
@@ -280,7 +282,8 @@ async def root():
     return '<h1>Welcome to the DebateEV API</h1><p>If you came here by accident, go to <a href="http://debatev.com">the main site</a>, or look at the <a href="http://api.debatev.com/docs">documentation</a></p>'
 
 
-@application.get('/api/v1/download', tags=["download"])
+@application.get('/api/v1/download', tags=["download"], responses={200: {"description": "Download a specific card as a word doc",
+                                                                   "content": {FileResponse}}})
 async def download(q: str):
     cardid = q.split(',')
     search_arr = []
