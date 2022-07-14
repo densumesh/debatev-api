@@ -295,7 +295,7 @@ async def saved(q: str):
                                      ['hits'][0]['_source'], 'dtype: ' + card['hits']['hits'][0]['_index'])
             i += 1
         except:
-            pass
+            logger.error("Error in saved function with: %s", card)
     return x
 
 
