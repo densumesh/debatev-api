@@ -294,7 +294,7 @@ async def saved(q: str):
             x['_source' + str(i)] = (card['hits']['hits'][0]['_id'], card['hits']
                                      ['hits'][0]['_source'], 'dtype: ' + card['hits']['hits'][0]['_index'])
             i += 1
-        except KeyError:
+        except:
             pass
     return x
 
