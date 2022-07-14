@@ -27,7 +27,6 @@ formatter = logging.Formatter(format, datefmt='%b %d %H:%M:%S')
 syslog.setFormatter(formatter)
 logger = logging.getLogger()
 logger.addHandler(syslog)
-logger.setLevel(logging.INFO)
 logger.info("This is a message")
 
 tags_metadata = [
