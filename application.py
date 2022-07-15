@@ -295,17 +295,19 @@ async def saved(q: str):
                                      ['hits'][0]['_source'], 'dtype: ' + card['hits']['hits'][0]['_index'])
             i += 1
         except:
-            logger.error("Error in saved function with: %s", card)
+            logger.error(
+                "Error in saved function with: %s and with the search term: %s" % (card, q))
+            pass
     return x
 
 
-@application.get("/", response_class=HTMLResponse)
+@ application.get("/", response_class=HTMLResponse)
 async def root():
     return '<h1>Welcome to the DebateEV API</h1><p>If you came here by accident, go to <a href="http://debatev.com">the main site</a>, or look at the <a href="http://api.debatev.com/docs">documentation</a></p>'
 
 
-@application.get('/api/v1/download', tags=["download"], responses={200: {"description": "Download a specific card as a word doc",
-                                                                   "content": {FileResponse}}})
+@ application.get('/api/v1/download', tags=["download"], responses={200: {"description": "Download a specific card as a word doc",
+                                                                          "content": {FileResponse}}})
 async def download(q: str):
     cardid = q.split(',')
     search_arr = []
@@ -327,7 +329,7 @@ async def download(q: str):
     return FileResponse('test.docx')
 
 
-@application.on_event("shutdown")
+@ application.on_event("shutdown")
 async def app_shutdown():
     await es.close()
 
