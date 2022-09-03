@@ -95,7 +95,7 @@ es = AsyncElasticsearch(
         },
     },
 },)
-async def search(q: str, p: int, year: Optional[str] = None, dtype: Optional[str] = "openev,ld,college,hspolicy", order: Optional[str] = None):
+async def search(q: str, p: int, year: Optional[str] = None, dtype: Optional[str] = "_all", order: Optional[str] = None):
     amt = 20
     if year:
         years = year.split(",")
@@ -154,7 +154,7 @@ async def search(q: str, p: int, year: Optional[str] = None, dtype: Optional[str
         },
     },
 })
-async def autocomplete(q: str, dtype: Optional[str] = "openev,ld,college,hspolicy", year: Optional[str] = None):
+async def autocomplete(q: str, dtype: Optional[str] = "_all", year: Optional[str] = None):
     amt = 5
     if year:
         years = year.split(",")
@@ -190,7 +190,7 @@ async def autocomplete(q: str, dtype: Optional[str] = "openev,ld,college,hspolic
 @application.get('/api/v1/cards/imfeelinglucky', tags=["imfeelinglucky"],
                  responses={
     200: {
-        "description": "Autocomplete search queries as you type",
+        "description": "Get a random card",
         "content": {
             "application/json": {
                 "example": {
@@ -211,7 +211,7 @@ async def autocomplete(q: str, dtype: Optional[str] = "openev,ld,college,hspolic
     }})
 async def imfeelinglucky():
     results = {}
-    res = await es.search(index="openev,ld,college,hspolicy,usersubmit", doc_type="cards", body={"size": 1, "query": {"function_score": {
+    res = await es.search(index="_all", doc_type="cards", body={"size": 1, "query": {"function_score": {
         "functions": [{"random_score": {"seed": ''.join(["{}".format(random.randint(0, 9)) for num in range(0, 13)])}}]}}})
     for doc in res['hits']['hits']:
         results['_source'] = (doc['_id'], doc['_source'],
@@ -222,7 +222,7 @@ async def imfeelinglucky():
 @application.get("/api/v1/cards/{cardid}", tags=["get_card"],
                  responses={
     200: {
-        "description": "Autocomplete search queries as you type",
+        "description": "Get a card by ID",
         "content": {
             "application/json": {
                 "example": {
@@ -257,7 +257,7 @@ async def get_card(cardid: str):
 
 @application.get("/api/v1/saved", tags=["saved"], responses={
     200: {
-        "description": "Autocomplete search queries as you type",
+        "description": "Get Saved Cards",
         "content": {
             "application/json": {
                 "example": {
