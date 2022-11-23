@@ -1,5 +1,6 @@
 #!/bin/bash
-sudo yum update
-sudo amazon-linux-extras install epel -y
-yum install pandoc
+sudo yum -y update 
+sudo amazon-linux-extras -y install epel 
+sudo yum repolist
+yum -y install pandoc 
 pandoc -v
