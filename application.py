@@ -130,7 +130,7 @@ async def search(q: str, p: int, year: Optional[str] = None, dtype: Optional[str
                                                doc['_source'], 'dtype: ' + doc['_index'])
                 i += 1
             else:
-                await es.delete_by_query(index="college,hspolicy,collegeld,ld,openev ", wait_for_completion=False, body={
+                await es.delete_by_query(index="college,hspolicy,collegeld,ld,openev", wait_for_completion=False, body={
                     "query": {"match_phrase": {"_id": doc['_id']}}})
     except KeyError:
         pass
@@ -154,7 +154,7 @@ async def search(q: str, p: int, year: Optional[str] = None, dtype: Optional[str
         },
     },
 })
-async def autocomplete(q: str, dtype: Optional[str] = "college,hspolicy,collegeld,ld,openev ", year: Optional[str] = None):
+async def autocomplete(q: str, dtype: Optional[str] = "college,hspolicy,collegeld,ld,openev", year: Optional[str] = None):
     amt = 5
     if year:
         years = year.split(",")
@@ -179,7 +179,7 @@ async def autocomplete(q: str, dtype: Optional[str] = "college,hspolicy,collegel
                                                doc['_source']['tag'], 'dtype: ' + doc['_index'])
                 i += 1
             else:
-                es.delete_by_query(index="college,hspolicy,collegeld,ld,openev ", wait_for_completion=False, body={
+                es.delete_by_query(index="college,hspolicy,collegeld,ld,openev", wait_for_completion=False, body={
                                    "query": {"match_phrase": {"_id": doc['_id']}}})
     except KeyError:
         pass
@@ -211,7 +211,7 @@ async def autocomplete(q: str, dtype: Optional[str] = "college,hspolicy,collegel
     }})
 async def imfeelinglucky():
     results = {}
-    res = await es.search(index="college,hspolicy,collegeld,ld,openev ", body={"size": 1, "query": {"function_score": {
+    res = await es.search(index="college,hspolicy,collegeld,ld,openev", body={"size": 1, "query": {"function_score": {
         "functions": [{"random_score": {"seed": ''.join(["{}".format(random.randint(0, 9)) for num in range(0, 13)])}}]}}})
     for doc in res['hits']['hits']:
         results['_source'] = (doc['_id'], doc['_source'],
@@ -242,7 +242,7 @@ async def imfeelinglucky():
         },
     }})
 async def get_card(cardid: str):
-    res = await es.search(index="college,hspolicy,collegeld,ld,openev ", body={
+    res = await es.search(index="college,hspolicy,collegeld,ld,openev", body={
         "query": {"match_phrase": {"_id": cardid}}})
     i = 0
     results = {}
@@ -280,7 +280,7 @@ async def saved(q: str):
     cardid = q.split(',')
     search_arr = []
     for i in range(len(cardid)):
-        search_arr.append({'index': 'college,hspolicy,collegeld,ld,openev '})
+        search_arr.append({'index': 'college,hspolicy,collegeld,ld,openev'})
         search_arr.append(
             {"query": {"match_phrase": {"_id": cardid[i]}}})
     req = ''
@@ -312,7 +312,7 @@ async def download(q: str):
     cardid = q.split(',')
     search_arr = []
     for i in range(len(cardid)):
-        search_arr.append({'index': 'college,hspolicy,collegeld,ld,openev '})
+        search_arr.append({'index': 'college,hspolicy,collegeld,ld,openev'})
         search_arr.append(
             {"query": {"match_phrase": {"_id": cardid[i]}}})
     req = ''
