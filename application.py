@@ -68,7 +68,7 @@ application.add_middleware(
     allow_headers=["*"],
 )
 es = AsyncElasticsearch(
-    hosts=[{'host': 'vpc-debateev2-rh4osogaj2xrcjufnehcrce7hm.us-west-1.es.amazonaws.com', 'port': 443}],
+    hosts=[{'host': 'vpc-debatev-r64moafdhze4axbpwde4jzrdwi.us-west-1.es.amazonaws.com', 'port': 443}],
     use_ssl=True
 )
 
@@ -106,7 +106,7 @@ async def search(q: str, p: int, year: Optional[str] = None, dtype: Optional[str
             body = {"query": {"bool": {"must": [{"multi_match": {"query": q, "fields": [
                 "tag^2", "cardHtml", "cite"], "operator": "and", "fuzziness": "AUTO", "prefix_length": 1}}, {"terms": {"year.keyword": years}}]}}}
         res = await es.search(index=dtype, from_=(
-            int(p)*amt), size=amt, doc_type="cards", track_total_hits=True, body=body)
+            int(p)*amt), size=amt, track_total_hits=True, body=body)
     else:
         if order == "year":
             body = {"query": {"multi_match": {"query": q, "fields": [
@@ -114,7 +114,7 @@ async def search(q: str, p: int, year: Optional[str] = None, dtype: Optional[str
         else:
             body = {"query": {"multi_match": {"query": q, "fields": [
                 "tag^2", "cardHtml", "cite"], "operator": "and", "fuzziness": "AUTO", "prefix_length": 1}}}
-        res = await es.search(index=dtype, doc_type="cards", from_=(int(p)*amt), track_total_hits=True,
+        res = await es.search(index=dtype, from_=(int(p)*amt), track_total_hits=True,
                               size=amt, body=body)
     tags = []
     cite = []
@@ -130,7 +130,7 @@ async def search(q: str, p: int, year: Optional[str] = None, dtype: Optional[str
                                                doc['_source'], 'dtype: ' + doc['_index'])
                 i += 1
             else:
-                await es.delete_by_query(index="_all", doc_type="cards", wait_for_completion=False, body={
+                await es.delete_by_query(index="_all", wait_for_completion=False, body={
                     "query": {"match_phrase": {"_id": doc['_id']}}})
     except KeyError:
         pass
@@ -161,9 +161,9 @@ async def autocomplete(q: str, dtype: Optional[str] = "_all", year: Optional[str
         body = {"query": {"bool": {"must": [{"multi_match": {"query": q, "fields": [
             "tag^2", "cardHtml", "cite"], "operator": "and", "fuzziness": 1, "prefix_length": 1}}, {"terms": {"year": years}}]}}, "fields": ["tag", "cite"]}
         res = await es.search(index=dtype, from_=(
-            int(0)*amt), size=amt, doc_type="cards", track_total_hits=True, body=body)
+            int(0)*amt), size=amt, track_total_hits=True, body=body)
     else:
-        res = await es.search(index=dtype, doc_type="cards", from_=(int(0)*amt), track_total_hits=True,
+        res = await es.search(index=dtype, from_=(int(0)*amt), track_total_hits=True,
                               size=amt, body={"query": {"multi_match": {"query": q, "fields": ["tag^2", "cardHtml", "cite"], "operator": "and", "fuzziness": 1, "prefix_length": 1}}, "fields": ["tag", "cite"]})
 
     tags = []
@@ -179,7 +179,7 @@ async def autocomplete(q: str, dtype: Optional[str] = "_all", year: Optional[str
                                                doc['_source']['tag'], 'dtype: ' + doc['_index'])
                 i += 1
             else:
-                es.delete_by_query(index="_all", doc_type="cards", wait_for_completion=False, body={
+                es.delete_by_query(index="_all", wait_for_completion=False, body={
                                    "query": {"match_phrase": {"_id": doc['_id']}}})
     except KeyError:
         pass
@@ -211,7 +211,7 @@ async def autocomplete(q: str, dtype: Optional[str] = "_all", year: Optional[str
     }})
 async def imfeelinglucky():
     results = {}
-    res = await es.search(index="_all", doc_type="cards", body={"size": 1, "query": {"function_score": {
+    res = await es.search(index="_all", body={"size": 1, "query": {"function_score": {
         "functions": [{"random_score": {"seed": ''.join(["{}".format(random.randint(0, 9)) for num in range(0, 13)])}}]}}})
     for doc in res['hits']['hits']:
         results['_source'] = (doc['_id'], doc['_source'],
