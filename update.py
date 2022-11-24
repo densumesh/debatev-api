@@ -53,7 +53,7 @@ def uploadcase(z, dtype):
         filepath = z['card ' + str(i + 1)][0]['filepath']
         year = z['card ' + str(i + 1)][0]['year']
         x = hashlib.sha224(bytes(tag, 'utf-8')).hexdigest()
-        es.index(index=dtype, doc_type='cards', id=x, body={
+        es.index(index=dtype, id=x, body={
             "tag": tag,
             "cite": cite,
             "cardHtml": cardHtml,
