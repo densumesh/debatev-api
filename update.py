@@ -13,7 +13,7 @@ os.environ.setdefault('PYPANDOC_PANDOC', '/usr/local/bin/pandoc')
 
 
 es = Elasticsearch(
-    hosts=[{'host': 'vpc-debateev2-rh4osogaj2xrcjufnehcrce7hm.us-west-1.es.amazonaws.com', 'port': 443}],
+    hosts=[{'host': 'vpc-debatev-r64moafdhze4axbpwde4jzrdwi.us-west-1.es.amazonaws.com', 'port': 443}],
     use_ssl=True
 )
 
