@@ -1,4 +1,3 @@
 #!/bin/bash
-sudo yum -y update 
-sudo amazon-linux-extras -y install epel 
-yum -y install pandoc 
+wget https://github.com/jgm/pandoc/releases/download/2.19.2/pandoc-2.19.2-linux-amd64.tar.gz
+tar xvzf pandoc-2.19.2-linux-amd64.tar.gz --strip-components 1 -C /usr/local

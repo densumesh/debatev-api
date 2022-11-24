@@ -9,6 +9,8 @@ import os
 import urllib3
 urllib3.disable_warnings()
 
+os.environ.setdefault('PYPANDOC_PANDOC', '/usr/local/bin/pandoc')
+
 
 es = Elasticsearch(
     hosts=[{'host': 'vpc-debateev2-rh4osogaj2xrcjufnehcrce7hm.us-west-1.es.amazonaws.com', 'port': 443}],

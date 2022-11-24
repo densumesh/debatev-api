@@ -1,4 +1,0 @@
-packages: 
-  yum:
-    epel-release: []
-    pandoc: []
