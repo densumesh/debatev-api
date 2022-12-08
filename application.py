@@ -69,7 +69,9 @@ application.add_middleware(
 )
 es = AsyncElasticsearch(
     hosts=[{'host': 'vpc-debatev-r64moafdhze4axbpwde4jzrdwi.us-west-1.es.amazonaws.com', 'port': 443}],
-    use_ssl=True
+    use_ssl=True,
+    timeout=30,
+    retry_on_timeout=True
 )
 
 
@@ -97,6 +99,7 @@ es = AsyncElasticsearch(
 },)
 async def search(q: str, p: int, year: Optional[str] = None, dtype: Optional[str] = "college,hspolicy,collegeld,ld,openev", order: Optional[str] = None):
     amt = 20
+    q = q[0:40]
     if year:
         years = year.split(",")
         if order == "year":
@@ -156,6 +159,7 @@ async def search(q: str, p: int, year: Optional[str] = None, dtype: Optional[str
 })
 async def autocomplete(q: str, dtype: Optional[str] = "college,hspolicy,collegeld,ld,openev", year: Optional[str] = None):
     amt = 5
+    q = q[0:40]
     if year:
         years = year.split(",")
         body = {"query": {"bool": {"must": [{"multi_match": {"query": q, "fields": [
@@ -179,8 +183,8 @@ async def autocomplete(q: str, dtype: Optional[str] = "college,hspolicy,collegel
                                                doc['_source']['tag'], 'dtype: ' + doc['_index'])
                 i += 1
             else:
-                es.delete_by_query(index="college,hspolicy,collegeld,ld,openev", wait_for_completion=False, body={
-                                   "query": {"match_phrase": {"_id": doc['_id']}}})
+                await es.delete_by_query(index="college,hspolicy,collegeld,ld,openev", wait_for_completion=False, body={
+                    "query": {"match_phrase": {"_id": doc['_id']}}})
     except KeyError:
         pass
 
