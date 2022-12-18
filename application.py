@@ -321,24 +321,29 @@ async def root():
 @ application.get('/api/v1/download', tags=["download"], responses={200: {"description": "Download a specific card as a word doc",
                                                                           "content": {FileResponse}}})
 async def download(q: str):
-    cardid = q.split(',')
-    search_arr = []
-    for i in range(len(cardid)):
-        search_arr.append({'index': 'college,hspolicy,collegeld,ld,openev'})
-        search_arr.append(
-            {"query": {"match_phrase": {"_id": cardid[i]}}})
-    req = ''
-    for each in search_arr:
-        req += '%s \n' % json.dumps(each)
-    res = await es.msearch(body=req)
-    a = ""
-    for card in res['responses']:
-        a += card['hits']['hits'][0]['_source']['cardHtml']
-    new_parser = HtmlToDocx()
+    try:
+        cardid = q.split(',')
+        search_arr = []
+        for i in range(len(cardid)):
+            search_arr.append({'index': 'college,hspolicy,collegeld,ld,openev'})
+            search_arr.append(
+                {"query": {"match_phrase": {"_id": cardid[i]}}})
+        req = ''
+        for each in search_arr:
+            req += '%s \n' % json.dumps(each)
+        res = await es.msearch(body=req)
+        a = ""
+        for card in res['responses']:
+            a += card['hits']['hits'][0]['_source']['cardHtml']
+        new_parser = HtmlToDocx()
 
-    docx = new_parser.parse_html_string(a)
-    docx.save('test.docx')
-    return FileResponse('test.docx')
+        docx = new_parser.parse_html_string(a)
+        docx.save('test.docx')
+        return FileResponse('test.docx')
+    except Exception as e:
+        logging.error(e)
+        logging.error("The query parameters were " + q)
+        raise HTTPException(status_code=500, detail="Download Failed")
 
 
 @ application.on_event("shutdown")
