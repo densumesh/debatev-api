@@ -1,5 +1,5 @@
 import random
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 import uvicorn
 from fastapi.responses import HTMLResponse, FileResponse
 from elasticsearch import AsyncElasticsearch
@@ -10,6 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import logging
 import socket
 from logging.handlers import SysLogHandler
+
 
 
 class ContextFilter(logging.Filter):
@@ -70,8 +71,7 @@ application.add_middleware(
 es = AsyncElasticsearch(
     hosts=[{'host': 'vpc-debatev-r64moafdhze4axbpwde4jzrdwi.us-west-1.es.amazonaws.com', 'port': 443}],
     use_ssl=True,
-    timeout=30,
-    retry_on_timeout=True
+    timeout=60
 )
 
 
@@ -98,48 +98,51 @@ es = AsyncElasticsearch(
     },
 },)
 async def search(q: str, p: int, year: Optional[str] = None, dtype: Optional[str] = "college,hspolicy,collegeld,ld,openev", order: Optional[str] = None):
-    amt = 20
-    q = q[0:40]
-    if year:
-        years = year.split(",")
-        if order == "year":
-            body = {"query": {"bool": {"must": [{"multi_match": {"query": q, "fields": [
-                "tag^2", "cardHtml", "cite"], "operator": "and", "fuzziness": "AUTO", "prefix_length": 1}}, {"terms": {"year.keyword": years}}]}}, "sort": [{"year": {"order": "desc"}}, "_score"]}
-        else:
-            body = {"query": {"bool": {"must": [{"multi_match": {"query": q, "fields": [
-                "tag^2", "cardHtml", "cite"], "operator": "and", "fuzziness": "AUTO", "prefix_length": 1}}, {"terms": {"year.keyword": years}}]}}}
-        res = await es.search(index=dtype, from_=(
-            int(p)*amt), size=amt, track_total_hits=True, body=body)
-    else:
-        if order == "year":
-            body = {"query": {"multi_match": {"query": q, "fields": [
-                "tag^2", "cardHtml", "cite"], "operator": "and", "fuzziness": "AUTO", "prefix_length": 1}}, "sort": [{"year.keyword": {"order": "desc"}}, "_score"]}
-        else:
-            body = {"query": {"multi_match": {"query": q, "fields": [
-                "tag^2", "cardHtml", "cite"], "operator": "and", "fuzziness": "AUTO", "prefix_length": 1}}}
-        res = await es.search(index=dtype, from_=(int(p)*amt), track_total_hits=True,
-                              size=amt, body=body)
-    tags = []
-    cite = []
-    results = {}
-    i = 0
-
     try:
-        for doc in res['hits']['hits']:
-            if doc['_source']['tag'] not in tags and doc['_source']['cite'] not in cite:
-                tags.append(doc['_source']['tag'])
-                cite.append(doc['_source']['cite'])
-                results['_source' + str(i)] = (doc['_id'],
-                                               doc['_source'], 'dtype: ' + doc['_index'])
-                i += 1
+        amt = 20
+        if year:
+            years = year.split(",")
+            if order == "year":
+                body = {"query": {"bool": {"must": [{"multi_match": {"query": q, "fields": [
+                    "tag^2", "cardHtml", "cite"], "operator": "and", "fuzziness": "AUTO", "prefix_length": 1}}, {"terms": {"year.keyword": years}}]}}, "sort": [{"year": {"order": "desc"}}, "_score"]}
             else:
-                await es.delete_by_query(index="college,hspolicy,collegeld,ld,openev", wait_for_completion=False, body={
-                    "query": {"match_phrase": {"_id": doc['_id']}}})
-    except KeyError:
-        pass
-    results['hits'] = res['hits']['total']['value']
-    return results
+                body = {"query": {"bool": {"must": [{"multi_match": {"query": q, "fields": [
+                    "tag^2", "cardHtml", "cite"], "operator": "and", "fuzziness": "AUTO", "prefix_length": 1}}, {"terms": {"year.keyword": years}}]}}}
+            res = await es.search(index=dtype, from_=(
+                int(p)*amt), size=amt, track_total_hits=True, body=body)
+        else:
+            if order == "year":
+                body = {"query": {"multi_match": {"query": q, "fields": [
+                    "tag^2", "cardHtml", "cite"], "operator": "and", "fuzziness": "AUTO", "prefix_length": 1}}, "sort": [{"year.keyword": {"order": "desc"}}, "_score"]}
+            else:
+                body = {"query": {"multi_match": {"query": q, "fields": [
+                    "tag^2", "cardHtml", "cite"], "operator": "and", "fuzziness": "AUTO", "prefix_length": 1}}}
+            res = await es.search(index=dtype, from_=(int(p)*amt), track_total_hits=True,
+                                size=amt, body=body)
+        tags = []
+        cite = []
+        results = {}
+        i = 0
 
+        try:
+            for doc in res['hits']['hits']:
+                if doc['_source']['tag'] not in tags and doc['_source']['cite'] not in cite:
+                    tags.append(doc['_source']['tag'])
+                    cite.append(doc['_source']['cite'])
+                    results['_source' + str(i)] = (doc['_id'],
+                                                doc['_source'], 'dtype: ' + doc['_index'])
+                    i += 1
+                else:
+                    await es.delete_by_query(index="college,hspolicy,collegeld,ld,openev", wait_for_completion=False, body={
+                        "query": {"match_phrase": {"_id": doc['_id']}}})
+        except KeyError:
+            pass
+        results['hits'] = res['hits']['total']['value']
+        return results
+    except Exception as e:
+        logging.error(e)
+        logging.error("The query parameters were " + q + " " + p + " " + year + " " + dtype)
+        raise HTTPException(status_code=500, detail="Search Timed Out")
 
 @application.get("/api/v1/autocomplete", tags=["autocomplete"],
                  responses={
@@ -158,37 +161,42 @@ async def search(q: str, p: int, year: Optional[str] = None, dtype: Optional[str
     },
 })
 async def autocomplete(q: str, dtype: Optional[str] = "college,hspolicy,collegeld,ld,openev", year: Optional[str] = None):
-    amt = 5
-    q = q[0:40]
-    if year:
-        years = year.split(",")
-        body = {"query": {"bool": {"must": [{"multi_match": {"query": q, "fields": [
-            "tag^2", "cardHtml", "cite"], "operator": "and", "fuzziness": 1, "prefix_length": 1}}, {"terms": {"year": years}}]}}, "fields": ["tag", "cite"]}
-        res = await es.search(index=dtype, from_=(
-            int(0)*amt), size=amt, track_total_hits=True, body=body)
-    else:
-        res = await es.search(index=dtype, from_=(int(0)*amt), track_total_hits=True,
-                              size=amt, body={"query": {"multi_match": {"query": q, "fields": ["tag^2", "cardHtml", "cite"], "operator": "and", "fuzziness": 1, "prefix_length": 1}}, "fields": ["tag", "cite"]})
-
-    tags = []
-    cite = []
-    results = {}
-    i = 0
     try:
-        for doc in res['hits']['hits']:
-            if doc['_source']['tag'] not in tags and doc['_source']['cite'] not in cite:
-                tags.append(doc['_source']['tag'])
-                cite.append(doc['_source']['cite'])
-                results['_source' + str(i)] = (doc['_id'],
-                                               doc['_source']['tag'], 'dtype: ' + doc['_index'])
-                i += 1
-            else:
-                await es.delete_by_query(index="college,hspolicy,collegeld,ld,openev", wait_for_completion=False, body={
-                    "query": {"match_phrase": {"_id": doc['_id']}}})
-    except KeyError:
-        pass
+        amt = 5
+        if year:
+            years = year.split(",")
+            body = {"query": {"bool": {"must": [{"multi_match": {"query": q, "fields": [
+                "tag^2", "cardHtml", "cite"], "operator": "and", "fuzziness": 1, "prefix_length": 1}}, {"terms": {"year": years}}]}}, "fields": ["tag", "cite"]}
+            res = await es.search(index=dtype, from_=(
+                int(0)*amt), size=amt, track_total_hits=True, body=body)
+        else:
+            res = await es.search(index=dtype, from_=(int(0)*amt), track_total_hits=True,
+                                size=amt, body={"query": {"multi_match": {"query": q, "fields": ["tag^2", "cardHtml", "cite"], "operator": "and", "fuzziness": 1, "prefix_length": 1}}, "fields": ["tag", "cite"]})
 
-    return results
+        tags = []
+        cite = []
+        results = {}
+        i = 0
+        try:
+            for doc in res['hits']['hits']:
+                if doc['_source']['tag'] not in tags and doc['_source']['cite'] not in cite:
+                    tags.append(doc['_source']['tag'])
+                    cite.append(doc['_source']['cite'])
+                    results['_source' + str(i)] = (doc['_id'],
+                                                doc['_source']['tag'], 'dtype: ' + doc['_index'])
+                    i += 1
+                else:
+                    es.delete_by_query(index="college,hspolicy,collegeld,ld,openev", wait_for_completion=False, body={
+                                    "query": {"match_phrase": {"_id": doc['_id']}}})
+        except KeyError:
+            pass
+
+        return results
+    except Exception as e:
+        logging.error(e)
+        logging.error("The query parameters were " + q + " " + year + " " + dtype)
+        raise HTTPException(status_code=500, detail="Search Timed Out")
+
 
 
 @application.get('/api/v1/cards/imfeelinglucky', tags=["imfeelinglucky"],
