@@ -104,7 +104,7 @@ async def search(q: str, p: int, year: Optional[str] = None, dtype: Optional[str
             years = year.split(",")
             if order == "year":
                 body = {"query": {"bool": {"must": [{"multi_match": {"query": q, "fields": [
-                    "tag^2", "cardHtml", "cite"], "operator": "and", "fuzziness": "AUTO", "prefix_length": 1}}, {"terms": {"year.keyword": years}}]}}, "sort": [{"year": {"order": "desc"}}, "_score"]}
+                    "tag^2", "cardHtml", "cite"], "operator": "and", "fuzziness": "AUTO", "prefix_length": 1}}, {"terms": {"year.keyword": years}}]}}, "sort": [{"year.keyword": {"order": "desc"}}, "_score"]}
             else:
                 body = {"query": {"bool": {"must": [{"multi_match": {"query": q, "fields": [
                     "tag^2", "cardHtml", "cite"], "operator": "and", "fuzziness": "AUTO", "prefix_length": 1}}, {"terms": {"year.keyword": years}}]}}}
