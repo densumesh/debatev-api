@@ -141,7 +141,7 @@ async def search(q: str, p: int, year: Optional[str] = None, dtype: Optional[str
         return results
     except Exception as e:
         logging.error(e)
-        logging.error("The query parameters were " + q + " " + p + " " + year + " " + dtype)
+        logging.error("The query parameters were " + q + " " + str(p) + " " + str(year) + " " + dtype)
         raise HTTPException(status_code=500, detail="Search Timed Out")
 
 @application.get("/api/v1/autocomplete", tags=["autocomplete"],
@@ -194,7 +194,7 @@ async def autocomplete(q: str, dtype: Optional[str] = "college,hspolicy,collegel
         return results
     except Exception as e:
         logging.error(e)
-        logging.error("The query parameters were " + q + " " + year + " " + dtype)
+        logging.error("The query parameters were " + q + " " + str(year) + " " + dtype)
         raise HTTPException(status_code=500, detail="Search Timed Out")
 
 
