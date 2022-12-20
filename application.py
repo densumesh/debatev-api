@@ -7,29 +7,9 @@ from typing import Optional
 import json
 from htmldocx import HtmlToDocx
 from fastapi.middleware.cors import CORSMiddleware
-import logging
-import socket
-from logging.handlers import SysLogHandler
 
 
 
-class ContextFilter(logging.Filter):
-    hostname = socket.gethostname()
-
-    def filter(self, record):
-        record.hostname = ContextFilter.hostname
-        return True
-
-
-syslog = SysLogHandler(address=('logs3.papertrailapp.com', 28701))
-syslog.addFilter(ContextFilter())
-format = '%(asctime)s %(hostname)s DEBATEV_BACKEND: %(message)s'
-formatter = logging.Formatter(format, datefmt='%b %d %H:%M:%S')
-syslog.setFormatter(formatter)
-logger = logging.getLogger()
-logger.addHandler(syslog)
-logger.setLevel(logging.WARNING)
-logger.info("This is a message")
 
 tags_metadata = [
     {
@@ -140,8 +120,8 @@ async def search(q: str, p: int, year: Optional[str] = None, dtype: Optional[str
         results['hits'] = res['hits']['total']['value']
         return results
     except Exception as e:
-        logging.error(e)
-        logging.error("The query parameters were " + q + " " + str(p) + " " + str(year) + " " + dtype)
+        print(e)
+        print("The query parameters were " + q + " " + str(p) + " " + str(year) + " " + dtype)
         raise HTTPException(status_code=500, detail="Search Timed Out")
 
 @application.get("/api/v1/autocomplete", tags=["autocomplete"],
@@ -193,8 +173,8 @@ async def autocomplete(q: str, dtype: Optional[str] = "college,hspolicy,collegel
 
         return results
     except Exception as e:
-        logging.error(e)
-        logging.error("The query parameters were " + q + " " + str(year) + " " + dtype)
+        print(e)
+        print("The query parameters were " + q + " " + str(year) + " " + dtype)
         raise HTTPException(status_code=500, detail="Search Timed Out")
 
 
@@ -307,7 +287,7 @@ async def saved(q: str):
                                      ['hits'][0]['_source'], 'dtype: ' + card['hits']['hits'][0]['_index'])
             i += 1
         except:
-            logger.error(
+            print(
                 "Error in saved function with: %s and with the search term: %s" % (card, q))
             pass
     return x
@@ -341,8 +321,8 @@ async def download(q: str):
         docx.save('test.docx')
         return FileResponse('test.docx')
     except Exception as e:
-        logging.error(e)
-        logging.error("The query parameters were " + q)
+        print(e)
+        print("The query parameters were " + q)
         raise HTTPException(status_code=500, detail="Download Failed")
 
 
