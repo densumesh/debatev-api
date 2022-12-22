@@ -166,7 +166,7 @@ async def autocomplete(q: str, dtype: Optional[str] = "college,hspolicy,collegel
                                                 doc['_source']['tag'], 'dtype: ' + doc['_index'])
                     i += 1
                 else:
-                    es.delete_by_query(index="college,hspolicy,collegeld,ld,openev", wait_for_completion=False, body={
+                    await es.delete_by_query(index="college,hspolicy,collegeld,ld,openev", wait_for_completion=False, body={
                                     "query": {"match_phrase": {"_id": doc['_id']}}})
         except KeyError:
             pass
