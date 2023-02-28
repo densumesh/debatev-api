@@ -9,8 +9,6 @@ from htmldocx import HtmlToDocx
 from fastapi.middleware.cors import CORSMiddleware
 
 
-
-
 tags_metadata = [
     {
         "name": "search",
@@ -98,10 +96,10 @@ async def search(q: str, p: int, year: Optional[str] = None, dtype: Optional[str
                 body = {"query": {"multi_match": {"query": q, "fields": [
                     "tag^2", "cardHtml", "cite"], "operator": "and", "fuzziness": "AUTO", "prefix_length": 1}}}
             res = await es.search(index=dtype, from_=(int(p)*amt), track_total_hits=True,
-                                size=amt, body=body)
+                                  size=amt, body=body)
         tags = []
         cite = []
-        results = {}
+        results = []
         i = 0
 
         try:
@@ -109,20 +107,22 @@ async def search(q: str, p: int, year: Optional[str] = None, dtype: Optional[str
                 if doc['_source']['tag'] not in tags and doc['_source']['cite'] not in cite:
                     tags.append(doc['_source']['tag'])
                     cite.append(doc['_source']['cite'])
-                    results['_source' + str(i)] = (doc['_id'],
-                                                doc['_source'], 'dtype: ' + doc['_index'])
+                    results.append({"id": doc['_id'],
+                                    "source": doc['_source'], "dtype": doc['_index']})
                     i += 1
                 else:
                     await es.delete_by_query(index="college,hspolicy,collegeld,ld,openev", wait_for_completion=False, body={
                         "query": {"match_phrase": {"_id": doc['_id']}}})
         except KeyError:
             pass
-        results['hits'] = res['hits']['total']['value']
+        results.append(res['hits']['total']['value'])
         return results
     except Exception as e:
         print(e)
-        print("The query parameters were " + q + " " + str(p) + " " + str(year) + " " + dtype)
+        print("The query parameters were " + q + " " +
+              str(p) + " " + str(year) + " " + dtype)
         raise HTTPException(status_code=500, detail="Search Timed Out")
+
 
 @application.get("/api/v1/autocomplete", tags=["autocomplete"],
                  responses={
@@ -151,23 +151,23 @@ async def autocomplete(q: str, dtype: Optional[str] = "college,hspolicy,collegel
                 int(0)*amt), size=amt, track_total_hits=True, body=body)
         else:
             res = await es.search(index=dtype, from_=(int(0)*amt), track_total_hits=True,
-                                size=amt, body={"query": {"multi_match": {"query": q, "fields": ["tag^2", "cardHtml", "cite"], "operator": "and", "fuzziness": 1, "prefix_length": 1}}, "fields": ["tag", "cite"]})
+                                  size=amt, body={"query": {"multi_match": {"query": q, "fields": ["tag^2", "cardHtml", "cite"], "operator": "and", "fuzziness": 1, "prefix_length": 1}}, "fields": ["tag", "cite"]})
 
         tags = []
         cite = []
-        results = {}
+        results = []
         i = 0
         try:
             for doc in res['hits']['hits']:
                 if doc['_source']['tag'] not in tags and doc['_source']['cite'] not in cite:
                     tags.append(doc['_source']['tag'])
                     cite.append(doc['_source']['cite'])
-                    results['_source' + str(i)] = (doc['_id'],
-                                                doc['_source']['tag'], 'dtype: ' + doc['_index'])
+                    results.append({"id": doc['_id'],
+                                    "source": doc['_source']['tag'], "dtype": doc['_index']})
                     i += 1
                 else:
                     await es.delete_by_query(index="college,hspolicy,collegeld,ld,openev", wait_for_completion=False, body={
-                                    "query": {"match_phrase": {"_id": doc['_id']}}})
+                        "query": {"match_phrase": {"_id": doc['_id']}}})
         except KeyError:
             pass
 
@@ -176,7 +176,6 @@ async def autocomplete(q: str, dtype: Optional[str] = "college,hspolicy,collegel
         print(e)
         print("The query parameters were " + q + " " + str(year) + " " + dtype)
         raise HTTPException(status_code=500, detail="Search Timed Out")
-
 
 
 @application.get('/api/v1/cards/imfeelinglucky', tags=["imfeelinglucky"],
@@ -202,12 +201,12 @@ async def autocomplete(q: str, dtype: Optional[str] = "college,hspolicy,collegel
         },
     }})
 async def imfeelinglucky():
-    results = {}
+    results = []
     res = await es.search(index="college,hspolicy,collegeld,ld,openev", body={"size": 1, "query": {"function_score": {
         "functions": [{"random_score": {"seed": ''.join(["{}".format(random.randint(0, 9)) for num in range(0, 13)])}}]}}})
     for doc in res['hits']['hits']:
-        results['_source'] = (doc['_id'], doc['_source'],
-                              'dtype: ' + doc['_index'])
+        results.append({"id": doc['_id'],
+                        "source": doc['_source'], "dtype": doc['_index']})
     return results
 
 
@@ -237,13 +236,13 @@ async def get_card(cardid: str):
     res = await es.search(index="college,hspolicy,collegeld,ld,openev", body={
         "query": {"match_phrase": {"_id": cardid}}})
     i = 0
-    results = {}
+    results = []
 
     for doc in res['hits']['hits']:
-        results['_source' + str(i)] = (doc['_id'],
-                                       doc['_source'], 'dtype: ' + doc['_index'])
+        results.append({"id": doc['_id'],
+                        "source": doc['_source'], "dtype": doc['_index']})
         i += 1
-    results['hits'] = res['hits']['total']['value']
+    results.append(res['hits']['total']['value'])
     return results
 
 
@@ -279,12 +278,14 @@ async def saved(q: str):
     for each in search_arr:
         req += '%s \n' % json.dumps(each)
     res = await es.msearch(body=req)
-    x = {}
+    x = []
     i = 0
     for card in res['responses']:
         try:
-            x['_source' + str(i)] = (card['hits']['hits'][0]['_id'], card['hits']
-                                     ['hits'][0]['_source'], 'dtype: ' + card['hits']['hits'][0]['_index'])
+
+            x.append({"id": card['hits']['hits'][0]['_id'],
+                      "source": card['hits']
+                      ['hits'][0]['_source'], "dtype": card['hits']['hits'][0]['_index']})
             i += 1
         except:
             print(
@@ -305,7 +306,8 @@ async def download(q: str):
         cardid = q.split(',')
         search_arr = []
         for i in range(len(cardid)):
-            search_arr.append({'index': 'college,hspolicy,collegeld,ld,openev'})
+            search_arr.append(
+                {'index': 'college,hspolicy,collegeld,ld,openev'})
             search_arr.append(
                 {"query": {"match_phrase": {"_id": cardid[i]}}})
         req = ''
