@@ -75,7 +75,7 @@ es = AsyncElasticsearch(
         },
     },
 },)
-async def search(q: str, p: int, year: Optional[str] = None, dtype: Optional[str] = "college,hspolicy,collegeld,ld,openev", order: Optional[str] = None):
+async def search(q: str, p: int, year: Optional[str] = None, dtype: Optional[str] = "college,hspolicy,collegeld,ld,openev", order: Optional[str] = None, device: Optional[str] = None):
     try:
         amt = 20
         if year:
@@ -115,7 +115,8 @@ async def search(q: str, p: int, year: Optional[str] = None, dtype: Optional[str
                         "query": {"match_phrase": {"_id": doc['_id']}}})
         except KeyError:
             pass
-        results.append(res['hits']['total']['value'])
+        if not device:
+            results.append(res['hits']['total']['value'])
         return results
     except Exception as e:
         print(e)
