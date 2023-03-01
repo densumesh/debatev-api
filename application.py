@@ -168,8 +168,7 @@ async def autocomplete(q: str, dtype: Optional[str] = "college,hspolicy,collegel
                     cite.append(doc['_source']['cite'])
                     results.append({"id": doc['_id'],
                                     "source": doc['_source']['tag'], "dtype": doc['_index']})
-                    results[i]["source"]["year"] = str(
-                        results[i]["source"]["year"])
+
                     i += 1
                 else:
                     await es.delete_by_query(index="college,hspolicy,collegeld,ld,openev", wait_for_completion=False, body={
