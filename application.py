@@ -212,8 +212,8 @@ async def imfeelinglucky():
     for doc in res['hits']['hits']:
         results.append({"id": doc['_id'],
                         "source": doc['_source'], "dtype": doc['_index']})
-        results[i]["source"]["year"] = str(
-            results[i]["source"]["year"])
+        results[0]["source"]["year"] = str(
+            results[0]["source"]["year"])
     return results
 
 
