@@ -109,6 +109,8 @@ async def search(q: str, p: int, year: Optional[str] = None, dtype: Optional[str
                     cite.append(doc['_source']['cite'])
                     results.append({"id": doc['_id'],
                                     "source": doc['_source'], "dtype": doc['_index']})
+                    results[i]["source"]["year"] = str(
+                        results[i]["source"]["year"])
                     i += 1
                 else:
                     await es.delete_by_query(index="college,hspolicy,collegeld,ld,openev", wait_for_completion=False, body={
@@ -117,6 +119,7 @@ async def search(q: str, p: int, year: Optional[str] = None, dtype: Optional[str
             pass
         if not device:
             results.append(res['hits']['total']['value'])
+
         return results
     except Exception as e:
         print(e)
@@ -165,6 +168,8 @@ async def autocomplete(q: str, dtype: Optional[str] = "college,hspolicy,collegel
                     cite.append(doc['_source']['cite'])
                     results.append({"id": doc['_id'],
                                     "source": doc['_source']['tag'], "dtype": doc['_index']})
+                    results[i]["source"]["year"] = str(
+                        results[i]["source"]["year"])
                     i += 1
                 else:
                     await es.delete_by_query(index="college,hspolicy,collegeld,ld,openev", wait_for_completion=False, body={
@@ -208,6 +213,8 @@ async def imfeelinglucky():
     for doc in res['hits']['hits']:
         results.append({"id": doc['_id'],
                         "source": doc['_source'], "dtype": doc['_index']})
+        results[i]["source"]["year"] = str(
+            results[i]["source"]["year"])
     return results
 
 
@@ -242,6 +249,8 @@ async def get_card(cardid: str):
     for doc in res['hits']['hits']:
         results.append({"id": doc['_id'],
                         "source": doc['_source'], "dtype": doc['_index']})
+        results[i]["source"]["year"] = str(
+            results[i]["source"]["year"])
         i += 1
     results.append(res['hits']['total']['value'])
     return results
@@ -287,6 +296,8 @@ async def saved(q: str):
             x.append({"id": card['hits']['hits'][0]['_id'],
                       "source": card['hits']
                       ['hits'][0]['_source'], "dtype": card['hits']['hits'][0]['_index']})
+            x[i]["source"]["year"] = str(
+                x[i]["source"]["year"])
             i += 1
         except:
             print(
