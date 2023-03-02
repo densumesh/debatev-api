@@ -59,22 +59,22 @@ es = AsyncElasticsearch(
         "description": "Results by query",
         "content": {
             "application/json": {
-                "example": {
-                    "_source0": [
-                        "CARD_ID",
-                        {
+                "example": [
+                    {
+                        "id": "CARD_ID",
+                        "source": {
                             "tag": "Tag with HTML formatting",
                             "cite": "Cite with HTML formatting",
                             "cardHtml": "Full text of response with HTML formatting",
                             "filepath": "Link to orginal document",
                             "year": "Year of card"
                         },
-                        "dtype: Index of document"
-                    ]}
-            }
+                        "dtype": "Index of document"
+                    }
+                ]
+            },
         },
-    },
-},)
+    }})
 async def search(q: str, p: int, year: Optional[str] = None, dtype: Optional[str] = "college,hspolicy,collegeld,ld,openev", order: Optional[str] = None, device: Optional[str] = None):
     try:
         amt = 20
@@ -128,22 +128,22 @@ async def search(q: str, p: int, year: Optional[str] = None, dtype: Optional[str
         raise HTTPException(status_code=500, detail="Search Timed Out")
 
 
-@application.get("/api/v1/autocomplete", tags=["autocomplete"],
-                 responses={
+@ application.get("/api/v1/autocomplete", tags=["autocomplete"],
+                  responses={
     200: {
         "description": "Autocomplete search queries as you type",
         "content": {
             "application/json": {
-                "example": {
-                    "_source0": [
-                        "CARD_ID",
-                        "Tag with HTML formatting",
-                        "dtype: Index of document"
-                    ]}
-            }
+                "example": [
+                    {
+                        "id": "CARD_ID",
+                        "source": "Tag with HTML formatting",
+                        "dtype": "Index of document"
+                    }
+                ]
+            },
         },
-    },
-})
+    }})
 async def autocomplete(q: str, dtype: Optional[str] = "college,hspolicy,collegeld,ld,openev", year: Optional[str] = None):
     try:
         amt = 5
@@ -183,25 +183,25 @@ async def autocomplete(q: str, dtype: Optional[str] = "college,hspolicy,collegel
         raise HTTPException(status_code=500, detail="Search Timed Out")
 
 
-@application.get('/api/v1/cards/imfeelinglucky', tags=["imfeelinglucky"],
-                 responses={
+@ application.get('/api/v1/cards/imfeelinglucky', tags=["imfeelinglucky"],
+                  responses={
     200: {
         "description": "Get a random card",
         "content": {
             "application/json": {
-                "example": {
-                    "_source": [
-                        "CARD_ID",
-                        {
+                "example": [
+                    {
+                        "id": "CARD_ID",
+                        "source": {
                             "tag": "Tag with HTML formatting",
                             "cite": "Cite with HTML formatting",
                             "cardHtml": "Full text of response with HTML formatting",
                             "filepath": "Link to orginal document",
                             "year": "Year of card"
                         },
-                        "dtype: Index of document"
-                    ]
-                }
+                        "dtype": "Index of document"
+                    }
+                ]
             },
         },
     }})
@@ -217,25 +217,25 @@ async def imfeelinglucky():
     return results
 
 
-@application.get("/api/v1/cards/{cardid}", tags=["get_card"],
-                 responses={
+@ application.get("/api/v1/cards/{cardid}", tags=["get_card"],
+                  responses={
     200: {
         "description": "Get a card by ID",
         "content": {
             "application/json": {
-                "example": {
-                    "_source0": [
-                        "CARD_ID",
-                        {
+                "example": [
+                    {
+                        "id": "CARD_ID",
+                        "source": {
                             "tag": "Tag with HTML formatting",
                             "cite": "Cite with HTML formatting",
                             "cardHtml": "Full text of response with HTML formatting",
                             "filepath": "Link to orginal document",
                             "year": "Year of card"
                         },
-                        "dtype: Index of document"
-                    ]
-                }
+                        "dtype": "Index of document"
+                    }
+                ]
             },
         },
     }})
@@ -255,24 +255,24 @@ async def get_card(cardid: str):
     return results
 
 
-@application.get("/api/v1/saved", tags=["saved"], responses={
+@ application.get("/api/v1/saved", tags=["saved"], responses={
     200: {
         "description": "Get Saved Cards",
         "content": {
             "application/json": {
-                "example": {
-                    "_source0": [
-                        "CARD_ID",
-                        {
+                "example": [
+                    {
+                        "id": "CARD_ID",
+                        "source": {
                             "tag": "Tag with HTML formatting",
                             "cite": "Cite with HTML formatting",
                             "cardHtml": "Full text of response with HTML formatting",
                             "filepath": "Link to orginal document",
                             "year": "Year of card"
                         },
-                        "dtype: Index of document"
-                    ]
-                }
+                        "dtype": "Index of document"
+                    }
+                ]
             },
         },
     }})
