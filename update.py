@@ -8,6 +8,9 @@ import json
 import os
 import urllib3
 urllib3.disable_warnings()
+import datetime
+
+
 
 os.environ.setdefault('PYPANDOC_PANDOC', '/usr/local/bin/pandoc')
 
@@ -86,6 +89,8 @@ headers = {
 
 
 def updatecases():
+    today = datetime.date.today()
+    year = today.year
     r = requests.get(
         f'https://api.opencaselist.com/v1/caselists/hspolicy22/recent', headers=headers, cookies=cookies)
     if r:
@@ -103,7 +108,7 @@ def updatecases():
                     with open('hspolicy_files/' + file['opensource'], 'wb') as f:
                         f.write(response.content)
                         z = converttoHTML(
-                            'hspolicy_files/' + file['opensource'], 'https://api.opencaselist.com/v1/download?path=' + file['opensource'], 'OpenEv', 2022)
+                            'hspolicy_files/' + file['opensource'], 'https://api.opencaselist.com/v1/download?path=' + file['opensource'], 'OpenEv', int(year))
                         uploadcase(z, 'hspolicy')
                         os.remove('hspolicy_files/' +
                                   file['opensource'])
@@ -127,7 +132,7 @@ def updatecases():
                     with open('hsld_files/' + file['opensource'], 'wb') as f:
                         f.write(response.content)
                         z = converttoHTML(
-                            'hsld_files/' + file['opensource'], 'https://api.opencaselist.com/v1/download?path=' + file['opensource'], 'OpenEv', 2022)
+                            'hsld_files/' + file['opensource'], 'https://api.opencaselist.com/v1/download?path=' + file['opensource'], 'OpenEv', int(year))
                         uploadcase(z, 'ld')
                         os.remove('hsld_files/' +
                                   file['opensource'])
@@ -151,7 +156,7 @@ def updatecases():
                     with open('college_files/' + file['opensource'], 'wb') as f:
                         f.write(response.content)
                         z = converttoHTML(
-                            'college_files/' + file['opensource'], 'https://api.opencaselist.com/v1/download?path=' + file['opensource'], 'OpenEv', 2022)
+                            'college_files/' + file['opensource'], 'https://api.opencaselist.com/v1/download?path=' + file['opensource'], 'OpenEv', int(year))
                         uploadcase(z, 'college')
                         os.remove('college_files/' +
                                   file['opensource'])
