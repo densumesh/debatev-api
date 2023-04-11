@@ -49,7 +49,10 @@ application.add_middleware(
 es = AsyncElasticsearch(
     hosts=[{'host': 'vpc-debatev-r64moafdhze4axbpwde4jzrdwi.us-west-1.es.amazonaws.com', 'port': 443}],
     use_ssl=True,
-    timeout=60
+    timeout=60,
+    retry_on_timeout=True,
+    max_retries=5
+
 )
 
 
